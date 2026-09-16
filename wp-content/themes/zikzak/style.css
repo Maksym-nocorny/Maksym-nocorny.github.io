@@ -4550,6 +4550,640 @@ body.zz-page-home .bottom .lang:focus-within .lang__text {
 	}
 }
 
+/* ---- assets/css-src/92-image-ratio.css (hand written) ---- */
+/* Pictures keep their proportions.
+ *
+ * Hand written, never touched by scripts/build_theme_css.py, bundled after the generated CSS.
+ *
+ * On the old site every picture was a bare <img src> with no size attributes, so the recovered
+ * rules only ever set one side of it and left the other to the picture. WordPress prints width
+ * and height attributes on every attachment image, and an attribute is a used size: when a rule
+ * sets or limits one side, the other side stays at the attribute and the picture is stretched.
+ * The attributes stay - they reserve the ratio for layout, so nothing jumps while pictures load -
+ * and `auto` below hands the free side back to the picture.
+ *
+ * Measured on 2026-09-16 with a sweep of all 412 pages at 1440px:
+ *
+ * 1. Client logos, About and the home page.
+ *      .card__img { max-height: 68%; max-width: 80% }
+ *    A 300 x 300 logo came out 174 x 69, a 162 x 146 logo 162 x 69: every logo taller than its
+ *    card was squashed flat. Both sides go back to auto and the two limits scale it evenly.
+ *
+ * 2. Pictures in project, news and service pages (blocks type_1, type_5 to type_8).
+ *      .card__img { width: 100% }
+ *    The width follows the column and the height stayed at the "large" attribute: a portrait
+ *    819 x 1024 drawn 750 wide was 1024 tall, a landscape in a news article 321 x 1024. 1106
+ *    pictures on 298 pages. Only <img> gets this: `div.card__img` in the other blocks is a frame
+ *    whose height comes from its :before padding and whose picture is object-fit: cover.
+ */
+
+body.zz-page-about .card__img,
+body.zz-page-home .clients .clients__card .card__img {
+	width: auto;
+	height: auto;
+}
+
+body.zz-page-case img.card__img,
+body.zz-page-news-single img.card__img,
+body.zz-page-service img.card__img {
+	height: auto;
+}
+
+/* ---- assets/css-src/93-news-article-cards.css (hand written) ---- */
+/* The blocks of a news article are not news cards.
+ *
+ * Hand written, never touched by scripts/build_theme_css.py, bundled after the generated CSS.
+ *
+ * The old site had two components that both called their root `.card`: the news card (the tiles
+ * on /news/ and under "Similar" at the foot of an article) and the article block (every picture,
+ * text and picture-with-text row inside `.gallery`). Vue kept them apart with a scope attribute
+ * each. The rebuilt stylesheet scopes by page instead, and both components live on the article
+ * page, so the tile rules reached the article blocks too:
+ *
+ *   body.zz-page-news-single .card { display: inline-block; width: calc(33.33333% - 50px);
+ *                                    height: 548px; overflow: hidden; margin: 0 25px 103px }
+ *
+ * Measured on 2026-09-16 at 1440px: every block of every article was a 321px tile, the text of a
+ * picture-with-text row stood one word per line, and pictures hung in a column a third of the
+ * page wide. Below 1200px the same rules made the blocks half width.
+ *
+ * What the article block had on the old site (round4/css/news-article.css, scope 0f8ceed8):
+ * a plain block, `font-size: 0`, `margin-bottom: 20px`, 14px at 1200px and below, 11px at 350px
+ * and below, none on the last one. That is put back here for the cards inside `.gallery` only;
+ * the tiles under "Similar" sit outside it and keep the tile rules.
+ *
+ * Inside, not just directly inside: two articles (/news/smart-office-sovremennyj-office/ and
+ * /ua/news/tendencii-sovremennogo-ofisa/) carry a pasted copy of the old page's own markup in a
+ * text field - `<div class="card" data-v-8223b372>` inside `.text` - and that nested card was the
+ * same 157px tile with the paragraph one word per line.
+ */
+
+body.zz-page-news-single .gallery .card {
+	display: block;
+	vertical-align: baseline;
+	width: auto;
+	height: auto;
+	overflow: visible;
+	margin: 0 0 20px;
+	font-size: 0;
+}
+
+body.zz-page-news-single .gallery .card:last-child {
+	margin-bottom: 0;
+}
+
+@media screen and (max-width: 1199.98px) {
+	body.zz-page-news-single .gallery .card {
+		margin-bottom: 14px;
+	}
+}
+
+@media screen and (max-width: 349.98px) {
+	body.zz-page-news-single .gallery .card {
+		margin-bottom: 11px;
+	}
+}
+
+/* ---- assets/css-src/94-service-case-cards.css (hand written) ---- */
+/* The project cards in the "Cases" block of a service page.
+ *
+ * Hand written from the archive, never touched by scripts/build_theme_css.py, bundled after the
+ * generated CSS.
+ *
+ * The card is its own component on the old site (scope data-v-2f8e57a4), and none of its rules
+ * reached the recovered stylesheet: on the eleven archived service pages the list was filled in
+ * by the browser, so the captured documents never carried the component. The one capture that did
+ * render the block, on the previous domain, carries all 63 rules inline:
+ * round4/olddomain-fail/files/en/services/dizajn-gotelyu-ta-gotelyu/index.html
+ * They are copied here one for one, generated by a script and not edited by hand, with three
+ * translations the stylesheet builder makes everywhere else:
+ *
+ *   - the scope attribute becomes `body.zz-page-service .similar`, which also keeps the rules off
+ *     the article blocks (`.gallery .card`) that share the class name on the same page;
+ *   - the font stacks become --zz-font-body and --zz-font-headline (assets/css-src/00-fonts.css);
+ *   - the breakpoints move onto the theme's grid: min-width 1201px -> 1200px, max-width 1200, 650,
+ *     400 and 350px -> 1199.98, 649.98, 399.98 and 349.98px.
+ *
+ * One value is corrected: `transition: transform 0 linear .5s` on `.card__line` is invalid (a
+ * unitless zero duration) and a browser drops the whole declaration; it is written `0s`.
+ *
+ * inc/news-services.php turns the cards on with the zz_service_show_cases filter.
+ */
+
+body.zz-page-service .similar .card {
+	display:inline-block;
+	vertical-align:top;
+	height:480px;
+	overflow:hidden;
+	position:relative;
+	width:calc(33.33333% - 43px);
+	margin:0 21px;
+}
+
+body.zz-page-service .similar .card__case {
+	transition:opacity .3s ease .8s;
+}
+
+body.zz-page-service .similar .card__square {
+	font:11px var(--zz-font-body);
+	color:rgba(28,28,28,.7);
+	text-transform:uppercase;
+	letter-spacing:2px;
+	margin-top:2px;
+}
+
+body.zz-page-service .similar .card__stub {
+	position:absolute;
+	pointer-events:none;
+	bottom:0;
+	left:0;
+	width:100%;
+	opacity:0;
+	transition:opacity .2s ease;
+	height:205px;
+	padding:34px 39px 0;
+}
+
+body.zz-page-service .similar .card__stub .card__title {
+	color:#fff;
+	padding-right:0;
+}
+
+body.zz-page-service .similar .card__stub .card__date {
+	color:hsla(0,0%,100%,.7);
+}
+
+body.zz-page-service .similar .card__stub .card__divider {
+	background-color:hsla(0,0%,100%,.62);
+}
+
+body.zz-page-service .similar .card__stub .card__read,
+body.zz-page-service .similar .card__stub .card__square {
+	color:hsla(0,0%,100%,.7);
+}
+
+body.zz-page-service .similar .card__image {
+	height:395px;
+	background-size:cover;
+	background-position:50%;
+	background-repeat:no-repeat;
+	background-color:#000;
+	position:relative;
+	-webkit-filter:grayscale(1);
+	filter:grayscale(1);
+	transition:-webkit-filter .5s ease;
+	transition:filter .5s ease;
+	transition:filter .5s ease,-webkit-filter .5s ease;
+}
+
+body.zz-page-service .similar .card__image>img {
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	z-index:-1;
+	-o-object-position:center;
+	object-position:center;
+	-o-object-fit:cover;
+	object-fit:cover;
+}
+
+body.zz-page-service .similar .card__image:before {
+	content:"";
+	display:block;
+	height:100%;
+	background:rgba(53,53,53,.06);
+}
+
+body.zz-page-service .similar .card__image:after {
+	content:"";
+	display:block;
+	width:100%;
+	height:100%;
+	position:absolute;
+	top:0;
+	left:0;
+	background:rgba(53,53,53,.45);
+	transition:opacity .5s ease;
+	opacity:0;
+}
+
+body.zz-page-service .similar .card_special .card__image {
+	background-color:#222;
+}
+
+body.zz-page-service .similar .card__date {
+	font:11px var(--zz-font-body);
+	text-transform:uppercase;
+	letter-spacing:2px;
+	color:rgba(28,28,28,.7);
+	transition:color .5s ease;
+}
+
+body.zz-page-service .similar .card__date span,
+body.zz-page-service .similar .card__divider {
+	display:inline-block;
+	vertical-align:middle;
+}
+
+body.zz-page-service .similar .card__divider {
+	width:36px;
+	height:1px;
+	background-color:rgba(93,93,92,.62);
+	margin:-1px 13px 0;
+	transition:background-color .5s ease;
+}
+
+body.zz-page-service .similar .card__title {
+	font:700 18px/1.6 var(--zz-font-body);
+	margin-top:14px;
+	padding-right:40px;
+	color:#1c1c1c;
+	transition:color .5s ease .3s;
+	text-transform:uppercase;
+	letter-spacing:1px;
+}
+
+body.zz-page-service .similar .card__content {
+	height:102px;
+	padding-top:0;
+	transition:transform .5s ease .3s;
+	position:relative;
+}
+
+body.zz-page-service .similar .card__content:before {
+	content:"";
+	display:block;
+	width:100%;
+	height:205px;
+	position:absolute;
+	bottom:0;
+	background-color:#1c1c1c;
+	opacity:1;
+	transition:opacity .5s ease,transform .5s ease .3s;
+	transform:scaleY(0);
+	transform-origin:0 100%;
+}
+
+body.zz-page-service .similar .card__hover {
+	visibility:hidden;
+	position:absolute;
+	top:170px;
+	left:0;
+	width:100%;
+	text-align:center;
+	transition:opacity .5s ease,z-index .5s step-end,visibility .5s step-end;
+	opacity:0;
+}
+
+body.zz-page-service .similar .card__hover:before {
+	content:"";
+	display:block;
+	width:100%;
+	height:1px;
+	background-color:hsla(0,0%,100%,.3);
+	margin-left:-100%;
+	transform-origin:0 0;
+	transition:transform 0s linear .5s;
+}
+
+body.zz-page-service .similar .card__inner {
+	display:inline-block;
+	width:83px;
+	margin-top:-20px;
+}
+
+body.zz-page-service .similar .card__word {
+	overflow:hidden;
+	font-size:11px;
+	letter-spacing:2px;
+	text-transform:uppercase;
+	color:#fff;
+	font-weight:700;
+}
+
+body.zz-page-service .similar .card__word span {
+	display:block;
+	transform:translate3d(0,15px,1px) rotate(6deg);
+	transform-origin:0 0;
+	transition:transform 0s linear .5s;
+}
+
+body.zz-page-service .similar .card__read_mobile {
+	display:none;
+}
+
+body.zz-page-service .similar .card__line {
+	width:100%;
+	height:1px;
+	background:#fff;
+	margin:3px 0 6px;
+	transform:scaleX(0);
+	transform-origin:0 0;
+	transition:transform 0s linear .5s;
+}
+
+body.zz-page-service .similar .card__read {
+	font:11px/1 var(--zz-font-body);
+	color:hsla(0,0%,100%,.5);
+	text-transform:uppercase;
+	letter-spacing:2px;
+	margin-top:32px;
+}
+
+@media screen and (min-width: 1200px) {
+	body.zz-page-service .similar .card:hover .card__content:before {
+		transform:scaleY(1);
+		opacity:1;
+	}
+
+	body.zz-page-service .similar .card:hover .card__stub {
+		opacity:1;
+		transition:opacity .5s ease .5s;
+	}
+
+	body.zz-page-service .similar .card:hover .card__case {
+		opacity:0;
+		transition:opacity .3s ease;
+	}
+
+	body.zz-page-service .similar .card:hover .card__image {
+		-webkit-filter:grayscale(0);
+		filter:grayscale(0);
+	}
+
+	body.zz-page-service .similar .card:hover .card__image:before {
+		opacity:.7;
+	}
+
+	body.zz-page-service .similar .card:hover .card__image:after {
+		opacity:1;
+	}
+
+	body.zz-page-service .similar .card:hover .card__hover {
+		opacity:1;
+		visibility:visible;
+		z-index:1;
+		transition:opacity 0s linear,z-index 0s step-start,visibility 0s step-start;
+	}
+
+	body.zz-page-service .similar .card:hover .card__hover:before {
+		transform:translate3d(100%,0,1px);
+		transition:transform 1s ease;
+	}
+
+	body.zz-page-service .similar .card:hover .card__word span {
+		transform:translateZ(1px) rotate(.001deg);
+		transition:transform 1s ease .7s;
+	}
+
+	body.zz-page-service .similar .card:hover .card__line {
+		transition:transform .5s ease .5s;
+		transform:scaleX(1);
+	}
+}
+
+@media screen and (max-width: 1199.98px) {
+	body.zz-page-service .similar .card {
+		width:calc(50% - 23px);
+		margin:0 11px 75px;
+		height:auto;
+		overflow:visible;
+	}
+
+	body.zz-page-service .similar .card__image {
+		height:452px;
+	}
+
+	body.zz-page-service .similar .card__image:before {
+		display:none;
+	}
+
+	body.zz-page-service .similar .card__image:after {
+		background-color:rgba(0,0,0,.6);
+		opacity:1;
+	}
+
+	body.zz-page-service .similar .card__content {
+		height:auto;
+	}
+
+	body.zz-page-service .similar .card__read {
+		display:none;
+	}
+
+	body.zz-page-service .similar .card__title {
+		margin-top:9px;
+	}
+
+	body.zz-page-service .similar .card__word {
+		font-size:13px;
+		letter-spacing:4px;
+	}
+
+	body.zz-page-service .similar .card__read {
+		display:block;
+		position:absolute;
+		top:calc(50% + 50px);
+		margin-top:0;
+		width:100%;
+		text-align:center;
+		left:0;
+		color:hsla(0,0%,82.4%,.8);
+	}
+
+	body.zz-page-service .similar .card__line {
+		background:none;
+		margin:5px 0 6px;
+	}
+
+	body.zz-page-service .similar .card .card__image {
+		-webkit-filter:grayscale(0);
+		filter:grayscale(0);
+	}
+
+	body.zz-page-service .similar .card .card__image:before {
+		opacity:.7;
+	}
+
+	body.zz-page-service .similar .card .card__hover {
+		opacity:1;
+		visibility:visible;
+		z-index:1;
+		transition:opacity 0s linear,z-index 0s step-start,visibility 0s step-start;
+		top:50%;
+	}
+
+	body.zz-page-service .similar .card .card__hover:before {
+		transform:translate3d(100%,0,1px);
+		transition:transform 1s ease;
+	}
+
+	body.zz-page-service .similar .card .card__word span {
+		transform:translateZ(1px) rotate(.001deg);
+		transition:transform 1s ease .7s;
+	}
+
+	body.zz-page-service .similar .card .card__line {
+		transition:transform .5s ease .5s;
+		transform:scaleX(1);
+	}
+}
+
+@media screen and (max-width: 649.98px) {
+	body.zz-page-service .similar .card {
+		width:100%;
+		margin:0 0 31px;
+	}
+
+	body.zz-page-service .similar .card__image {
+		height:467px;
+	}
+
+	body.zz-page-service .similar .card__content {
+		padding-top:3px;
+	}
+
+	body.zz-page-service .similar .card__title {
+		font-size:14px;
+		line-height:22px;
+	}
+}
+
+@media screen and (max-width: 399.98px) {
+	body.zz-page-service .similar .card {
+		margin:0 0 51px;
+	}
+
+	body.zz-page-service .similar .card__image {
+		height:431px;
+	}
+}
+
+@media screen and (max-width: 349.98px) {
+	body.zz-page-service .similar .card {
+		margin:0 0 48px;
+	}
+
+	body.zz-page-service .similar .card__image {
+		height:380px;
+	}
+
+	body.zz-page-service .similar .card__title {
+		padding-right:0;
+		font-size:14px;
+		line-height:22px;
+	}
+
+	body.zz-page-service .similar .card__square {
+		margin-top:5px;
+	}
+}
+
+/* ---- assets/css-src/95-service-steps-slider.css (hand written) ---- */
+/* "Stages of work" on a service page is not the project gallery carousel.
+ *
+ * Hand written, never touched by scripts/build_theme_css.py, bundled after the generated CSS.
+ *
+ * Two components on the old service page were called `.slider`: the gallery carousel of the
+ * article blocks (scope data-v-3753d47f) and the five stage carousel (scope data-v-5b8923c8).
+ * round4/css/what-we-do-service.css keeps them apart; the rebuilt stylesheet scopes by page, so
+ * the gallery's frame reached the stages as well:
+ *
+ *   .slider { position: relative; padding-top: 50% }                (60% at 400px and below)
+ *   .slider .slick-slider { position: absolute; top: 0; left: 0; height: 100% }
+ *
+ * A gallery needs that: its slides are backgrounds with no height of their own, so the frame is
+ * a fixed ratio box and the track is laid over it. A stage has height of its own - the picture is
+ * 474px, the text panel beside it 411px plus 20px - and does not fit a ratio box. Measured on
+ * 2026-09-16 at 1440px on /what-we-do/officeinteriordesign/: the stages sat in a 680px tall box,
+ * a 200px empty band under them, and the two arrows, positioned from the bottom of that box, hung
+ * in the empty band away from the slide.
+ *
+ * The arrow glyph is drawn on `.slick-arrow__image`, which the recovered rule sizes with width and
+ * height 100%. The template prints it as a <span>, and an inline box ignores both, so the glyph had
+ * no size and the arrows were invisible. It is made a block here.
+ */
+
+body.zz-page-service .steps .slider {
+	padding-top: 0;
+}
+
+body.zz-page-service .steps .slider .slick-slider {
+	position: relative;
+	top: auto;
+	left: auto;
+	height: auto;
+}
+
+body.zz-page-service .steps .slick-arrow__image {
+	display: block;
+}
+
+/* ---- assets/css-src/96-about-clients-rows.css (hand written) ---- */
+/* The client logos on About below 1200px: four rows that scroll sideways.
+ *
+ * Hand written, never touched by scripts/build_theme_css.py, bundled after the generated CSS.
+ *
+ * On the old site the wall of logos was a desktop only layout. The About component
+ * (files/zikzakarchitects.com/_nuxt/a9253a9.js) printed `.clients__list` when the window was wider
+ * than 1200px and otherwise a slick carousel, `.clients__slider`, with
+ * `{ variableWidth: true, rows: 4, infinite: false, arrows: true }`: four rows of logo cards moving
+ * sideways, each card at the fixed size the recovered rules still give it below 1200px (220 x 103,
+ * 188 x 88 at 650px, 147 x 68 at 350px). The carousel was rendered in the browser only, so no
+ * capture holds its rules, and the rebuilt page prints the wall at every width.
+ *
+ * With fixed size cards in a narrow column the wall breaks: measured on 2026-09-16 at 390px, one
+ * 188px card per row in a 346px column, all 47 logos stacked down the left half of the screen
+ * 4100px tall.
+ *
+ * This keeps the old behaviour without guessing at the carousel's lost styling: the same cards, in
+ * the same four rows, in a strip the visitor swipes or scrolls sideways. The column is narrower
+ * than a whole number of cards at every width in the range, so the next card always shows cut at
+ * the edge, which is the cue that there is more.
+ */
+
+@media screen and (max-width: 1199.98px) {
+	body.zz-page-about .clients__list {
+		display: grid;
+		grid-auto-flow: column;
+		grid-template-rows: repeat(4, auto);
+		justify-content: start;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-snap-type: x proximity;
+		-webkit-overflow-scrolling: touch;
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+	}
+
+	body.zz-page-about .clients__list::-webkit-scrollbar {
+		display: none;
+	}
+
+	body.zz-page-about .clients__list .card {
+		scroll-snap-align: start;
+	}
+}
+
+/* ---- assets/css-src/97-about-team-filter.css (hand written) ---- */
+/* The crew filter on About hides the people it filters out.
+ *
+ * Hand written, never touched by scripts/build_theme_css.py, bundled after the generated CSS.
+ *
+ * The filter script (zz_vpage_enqueue_behaviour() in inc/vpages.php) sets the `hidden` attribute
+ * on everyone outside the chosen crew. `hidden` is only `display: none` from the browser's own
+ * stylesheet and the reset's `[hidden] { display: none }`, and the recovered rule for a name,
+ * `.text { display: inline-block }`, is more specific than both. Measured on 2026-09-16 at 1440px:
+ * with "Technical crew" chosen, 7 of the 9 people carried `hidden` and all 9 were still on the
+ * page - the buttons changed their underline and nothing else.
+ */
+
+body.zz-page-about .team__line .text[hidden] {
+	display: none;
+}
+
 /* ---- assets/css-src/99-safety.css (hand written) ---- */
 /* Safety net and WordPress essentials.
  *

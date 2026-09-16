@@ -53,7 +53,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 /*# sourceURL=global-styles-inline-css */
 </style>
 
-<link rel='stylesheet' id='zikzak-css' href='https://maksym-nocorny.github.io/wp-content/themes/zikzak/style.css?ver=1789549509' media='all' />
+<link rel='stylesheet' id='zikzak-css' href='https://maksym-nocorny.github.io/wp-content/themes/zikzak/style.css?ver=1789554102' media='all' />
 </head>
 <body class="wp-singular vpages-template-default single single-vpages postid-857 wp-embed-responsive wp-theme-zikzak zz-page-careers zz-lang-ua lang-ua">
 
@@ -652,7 +652,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 						</button>
 							<input type="hidden" name="lang" value="ua">
 	<input type="hidden" name="page_url" value="https://maksym-nocorny.github.io/ua/careers/">
-	<input type="hidden" name="zz_token" value="1789551386.2d30a28cbacc2a922518beda71c15923ff6bf813923d73ace1890e0585e37bd7">
+	<input type="hidden" name="zz_token" value="1789554141.0a5e2184dca2b21e30a84061f12bc833ba7ef5f064e82b6dfed3e9b5f2b1cb37">
 	<div class="screen-reader-text" aria-hidden="true">
 		<label for="zz-cv-website">Залиште це поле порожнім</label>
 		<input type="text" id="zz-cv-website" name="formdata_website" value=""
@@ -812,7 +812,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 						</button>
 							<input type="hidden" name="lang" value="ua">
 	<input type="hidden" name="page_url" value="https://maksym-nocorny.github.io/ua/careers/">
-	<input type="hidden" name="zz_token" value="1789551386.2d30a28cbacc2a922518beda71c15923ff6bf813923d73ace1890e0585e37bd7">
+	<input type="hidden" name="zz_token" value="1789554141.0a5e2184dca2b21e30a84061f12bc833ba7ef5f064e82b6dfed3e9b5f2b1cb37">
 	<div class="screen-reader-text" aria-hidden="true">
 		<label for="zz-quote-website">Залиште це поле порожнім</label>
 		<input type="text" id="zz-quote-website" name="formdata_website" value=""
@@ -847,16 +847,157 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 <script type="speculationrules">
 {"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/zikzak/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
 </script>
-<script id="zikzak-js" src="https://maksym-nocorny.github.io/wp-content/themes/zikzak/assets/js/theme.js?ver=1789465862"></script>
+<script id="zikzak-js" src="https://maksym-nocorny.github.io/wp-content/themes/zikzak/assets/js/theme.js?ver=1789552555"></script>
 <script id="zikzak-js-after">
 ( function () {
 	var doc = document;
 
+	/* The team marquee on About. The stylesheet walks every .team__line left by half its own width
+	   for ever (translate3d(-50%) in @keyframes line-data-v-78b8f5b0). That only loops without a
+	   jump when the line holds the same names twice and each half is at least a window wide; with
+	   the names printed once, the line runs out halfway and the right side of the screen is empty.
+	   The old page component made it true after mount - clonePersons() in
+	   round3/olddomain/files/js/chunk-43572b28.*.js - and this is the same fill: add the names
+	   again one by one until the line is a window wide, then double the whole line, and run it at
+	   1.5 s per name plus 5 s per line index, as the old page did.
+	   Unlike the old one it takes its own copies off before it fills again, so a resize or a filter
+	   does not keep doubling the line. The copies are aria-hidden, so a screen reader hears every
+	   person once, and keep data-zz-crew, so they follow the crew filter with their originals. */
+	var lines = doc.querySelectorAll( '.team__line' );
+	/* Everyone, in the order the server printed them, taken before any copy exists. */
+	var crew = Array.prototype.slice.call( doc.querySelectorAll( '.team__line [data-zz-crew]' ) );
+	var fillLines = function () {
+		var width = window.innerWidth;
+		var gone = doc.querySelectorAll( '.team__line [data-zz-clone]' );
+		for ( var g = 0; g < gone.length; g++ ) {
+			gone[ g ].parentNode.removeChild( gone[ g ] );
+		}
+		/* The people the filter leaves are split across the lines again, the first line taking
+		   the larger half - the old page's filterTeam() did the same - so a crew of two is one
+		   name per line rather than an empty line over a full one. The rest wait in the first
+		   line, hidden. */
+		var shownPeople = crew.filter( function ( person ) {
+			return ! person.hidden;
+		} );
+		var perLine = Math.max( 1, Math.ceil( shownPeople.length / lines.length ) );
+		for ( var p = 0; p < shownPeople.length; p++ ) {
+			lines[ Math.min( lines.length - 1, Math.floor( p / perLine ) ) ].appendChild( shownPeople[ p ] );
+		}
+		for ( var q = 0; q < crew.length; q++ ) {
+			if ( crew[ q ].hidden ) {
+				lines[ 0 ].appendChild( crew[ q ] );
+			}
+		}
+		for ( var i = 0; i < lines.length; i++ ) {
+			var line = lines[ i ];
+			var set = Array.prototype.slice.call( line.children ).filter( function ( person ) {
+				return ! person.hidden;
+			} );
+			var copy = function ( node ) {
+				var twin = node.cloneNode( true );
+				twin.setAttribute( 'data-zz-clone', '' );
+				twin.setAttribute( 'aria-hidden', 'true' );
+				twin.classList.remove( 'text_active' );
+				line.appendChild( twin );
+			};
+			var shown = 0;
+			if ( set.length && line.clientWidth > 0 ) {
+				for ( var n = 0; line.clientWidth < width && n < 200; n++ ) {
+					copy( set[ n % set.length ] );
+				}
+				var half = Array.prototype.slice.call( line.children );
+				for ( var h = 0; h < half.length; h++ ) {
+					copy( half[ h ] );
+				}
+			}
+			for ( var s = 0; s < line.children.length; s++ ) {
+				shown += line.children[ s ].hidden ? 0 : 1;
+			}
+			/* Start the walk again from the first name, so the new width takes effect at once. */
+			line.style.animationName = 'none';
+			void line.offsetWidth;
+			line.style.animationName = '';
+			line.style.animationDuration = ( 1.5 * shown + 5 * i ) + 's';
+		}
+	};
+	if ( lines.length ) {
+		fillLines();
+		if ( doc.fonts && doc.fonts.ready ) {
+			doc.fonts.ready.then( fillLines );
+		}
+		var lastWidth = window.innerWidth;
+		var resizeTimer = 0;
+		window.addEventListener( 'resize', function () {
+			clearTimeout( resizeTimer );
+			resizeTimer = setTimeout( function () {
+				if ( window.innerWidth !== lastWidth ) {
+					lastWidth = window.innerWidth;
+					fillLines();
+				}
+			}, 300 );
+		} );
+
+		/* A tap on a name pauses its line and shows the photograph; a tap anywhere else lets every
+		   line run again. On a desktop :hover does the same from the stylesheet. */
+		doc.addEventListener( 'click', function ( event ) {
+			var text = event.target.closest ? event.target.closest( '.team__line .text' ) : null;
+			var was = doc.querySelectorAll( '.team__line .text_active' );
+			for ( var w = 0; w < was.length; w++ ) {
+				was[ w ].classList.remove( 'text_active' );
+			}
+			for ( var l = 0; l < lines.length; l++ ) {
+				lines[ l ].style.animationPlayState = '';
+				lines[ l ].classList.remove( 'team__line_active' );
+			}
+			if ( text ) {
+				text.parentNode.style.animationPlayState = 'paused';
+				text.parentNode.classList.add( 'team__line_active' );
+				text.classList.add( 'text_active' );
+			}
+		} );
+
+		/* On a desktop the photograph follows the pointer across the name, and the white copy of
+		   the name inside the photograph slides the other way so it stays over the dark one - the
+		   old page's mousemove handler. The offset is taken from the photograph's resting place
+		   (offsetLeft and offsetTop ignore transforms), not from its current box, so it does not
+		   chase its own movement. */
+		doc.addEventListener( 'mousemove', function ( event ) {
+			var text = event.target;
+			if ( window.innerWidth <= 1200 || ! text.classList || ! text.classList.contains( 'text' ) || ! text.closest( '.team__line' ) ) {
+				return;
+			}
+			var image = text.querySelector( '.text__image' );
+			var mask = text.querySelector( '.text__case' );
+			var roleMask = text.querySelector( '.text__poscont' );
+			if ( ! image ) {
+				return;
+			}
+			var box = text.getBoundingClientRect();
+			var dx = event.clientX - ( box.left + image.offsetLeft + image.offsetWidth / 2 );
+			var dy = event.clientY - ( box.top + image.offsetTop + image.offsetHeight / 2 );
+			image.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,1px)';
+			image.style.transition = 'transform .1s linear, opacity .8s ease';
+			var masks = [ mask, roleMask ];
+			for ( var m = 0; m < masks.length; m++ ) {
+				if ( masks[ m ] ) {
+					masks[ m ].style.transform = 'translate3d(' + dx + 'px,0,1px)';
+					masks[ m ].style.transition = 'transform .1s linear';
+					if ( masks[ m ].firstElementChild ) {
+						masks[ m ].firstElementChild.style.transform = 'translate3d(' + ( -dx ) + 'px,0,1px)';
+						masks[ m ].firstElementChild.style.transition = 'transform .1s linear, opacity .1s ease';
+					}
+				}
+			}
+		} );
+	}
+
 	/* The crew filter on About. Buttons carry data-zz-filter with a term slug, or "" for All;
-	   every team card carries data-zz-crew with the slugs it belongs to, space separated. */
+	   every team card carries data-zz-crew with the slugs it belongs to, space separated. The
+	   marquee copies are left out of this list: fillLines() copies them again from the filtered
+	   originals after every change. */
 	var filters = doc.querySelectorAll( '[data-zz-filter]' );
 	if ( filters.length ) {
-		var people = doc.querySelectorAll( '[data-zz-crew]' );
+		var people = doc.querySelectorAll( '[data-zz-crew]:not([data-zz-clone])' );
 		var apply = function ( want ) {
 			for ( var i = 0; i < people.length; i++ ) {
 				var crews = ' ' + people[ i ].getAttribute( 'data-zz-crew' ) + ' ';
@@ -871,6 +1012,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 		for ( var k = 0; k < filters.length; k++ ) {
 			filters[ k ].addEventListener( 'click', function ( event ) {
 				apply( event.currentTarget.getAttribute( 'data-zz-filter' ) );
+				fillLines();
 			} );
 		}
 	}

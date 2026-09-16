@@ -115,6 +115,33 @@
 		 * the bottom of the window. Everything further down is still the observer's job.
 		 */
 		window.addEventListener( 'load', sweep );
+
+		/*
+		 * The end of the page. The observer waits until an element is 80px inside the window, and
+		 * `custom-fade` holds an element 50px below its place (translate3d(0,50px) scaleY(1.3) in
+		 * animations.css) until it is marked. So the last row of a page can sit lower than the
+		 * window will ever scroll and stay hidden for good - measured on 2026-09-16 at 1440 x 900
+		 * and 1920 x 1080, that was `.footer__bottom` (the year, the legal links and the social
+		 * links) on every page that has it. Once the window cannot go any further, sweep() lets
+		 * everything still waiting in.
+		 */
+		var ticking = false;
+		window.addEventListener(
+			'scroll',
+			function () {
+				if ( ticking ) {
+					return;
+				}
+				ticking = true;
+				window.requestAnimationFrame( function () {
+					ticking = false;
+					if ( atEnd() ) {
+						sweep();
+					}
+				} );
+			},
+			{ passive: true }
+		);
 		doc.addEventListener(
 			'visibilitychange',
 			function () {
@@ -125,10 +152,16 @@
 		);
 	}
 
-	/** Marks everything that is already within the window, whether or not the observer said so. */
+	/** True when the window shows the last pixel of the document and cannot scroll further. */
+	function atEnd() {
+		return window.pageYOffset + window.innerHeight >= doc.documentElement.scrollHeight - 2;
+	}
+
+	/** Marks everything that is already within the window, whether or not the observer said so.
+	 *  At the end of the document that is everything: nothing further down will ever scroll in. */
 	function sweep() {
 		var remaining = doc.querySelectorAll( '[data-aos]:not(.aos-animate)' );
-		var limit     = window.innerHeight;
+		var limit     = atEnd() ? Infinity : window.innerHeight;
 
 		for ( var i = 0; i < remaining.length; i++ ) {
 			if ( remaining[ i ].getBoundingClientRect().top < limit ) {
